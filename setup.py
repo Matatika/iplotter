@@ -6,7 +6,7 @@ __version__ = '0.4.3'
 if __name__ == '__main__':
 
     setup(
-        name='iplotter',
+        name='matatika-iplotter',
         version=__version__,
         description='JavaScript Charting for iPython/Jupyter notebooks',
         setup_requires=['setuptools-markdown'],
