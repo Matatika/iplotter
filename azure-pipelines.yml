@@ -1,0 +1,33 @@
+trigger:
+- master
+- dev
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: TwineAuthenticate@1
+  inputs:
+    pythonUploadServiceConnection: 'TestPyPi'
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/dev'))
+  displayName: Twine Authenticate for TestPyPi
+
+- task: TwineAuthenticate@1
+  inputs:
+    pythonUploadServiceConnection: 'PyPi'
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  displayName: Twine Authenticate for PyPi
+
+- script: |
+    pip install wheel
+    pip install twine
+    python setup.py bdist_wheel
+  displayName: 'Package'
+
+- script: python -m twine upload -r testpypi --config-file $(PYPIRC_PATH) --skip-existing dist/*.whl
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/dev'))
+  displayName: 'Upload to TestPyPi'
+
+- script: python -m twine upload --config-file $(PYPIRC_PATH) --skip-existing dist/*.whl
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  displayName: 'Upload to PyPi'
