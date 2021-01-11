@@ -6,9 +6,14 @@ import os
 class VirtualBrowser(object):
     """Helper class for converting html charts to png."""
 
-    def __init__(self, driver=webdriver.Chrome):
+    _chrome_options = webdriver.ChromeOptions()
+    _chrome_options.add_argument('--headless')
+    _chrome_options.add_argument('--hide-scrollbars')
+    _chrome_driver = webdriver.Chrome(options=_chrome_options)
+
+    def __init__(self, driver=_chrome_driver):
         super(VirtualBrowser, self).__init__()
-        self.driver = driver()
+        self.driver = driver
 
     def __enter__(self):
         return self
