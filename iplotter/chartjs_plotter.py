@@ -17,8 +17,6 @@ class ChartJSPlotter(IPlotter):
         <canvas id='{{div_id}}'></canvas>
         <script>
             var ctx = document.getElementById('{{div_id}}').getContext('2d');
-            ctx.canvas.width  = {{w}} - (.1 * {{w}});
-            ctx.canvas.height = {{h}} - (.15 * {{h}});
             var myNewChart = new Chart(ctx,{ type: '{{chart_type}}', data: {{data}}, options: {{options}} });
         </script>
     """
@@ -31,9 +29,7 @@ class ChartJSPlotter(IPlotter):
                chart_type,
                options=None,
                div_id="chart",
-               head="",
-               w=800,
-               h=420):
+               head=""):
         """Render the data in HTML template."""
         if not self.is_valid_name(div_id):
             raise ValueError(
@@ -46,9 +42,7 @@ class ChartJSPlotter(IPlotter):
                 data, indent=4).replace("'", "\\'").replace('"', "'"),
             chart_type=chart_type,
             options=json.dumps(
-                options, indent=4).replace("'", "\\'").replace('"', "'"),
-            w=w,
-            h=h)
+                options, indent=4).replace("'", "\\'").replace('"', "'"))
 
     def plot_and_save(self,
                       data,
@@ -59,7 +53,7 @@ class ChartJSPlotter(IPlotter):
                       filename='chart',
                       overwrite=True):
         """Save the rendered html to a file and return an IFrame to display the plot in the notebook."""
-        self.save(data, chart_type, options, filename, w, h, overwrite)
+        self.save(data, chart_type, options, filename, overwrite)
         return IFrame(filename + '.html', w, h)
 
     def plot(self, data, chart_type, options=None, w=800, h=420):
@@ -81,8 +75,6 @@ class ChartJSPlotter(IPlotter):
              chart_type,
              options=None,
              filename='chart',
-             w=800,
-             h=420,
              overwrite=True):
         """Save the rendered html to a file in the same directory as the notebook."""
         html = self.render(
@@ -90,9 +82,7 @@ class ChartJSPlotter(IPlotter):
             chart_type=chart_type,
             options=options,
             div_id=filename,
-            head=self.head,
-            w=w,
-            h=h)
+            head=self.head)
 
         if overwrite:
             with open(filename.replace(" ", "_") + '.html', 'w') as f:
