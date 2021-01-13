@@ -64,9 +64,7 @@ class ChartJSPlotter(IPlotter):
                     data=data,
                     chart_type=chart_type,
                     options=options,
-                    head=self.head,
-                    w=w,
-                    h=h),
+                    head=self.head),
                 w=w,
                 h=h))
 
