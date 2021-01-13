@@ -1,24 +1,31 @@
+from IPython.display import HTML
 from jinja2 import Template
-from IPython.display import IFrame, HTML
-import os
 import json
+import os
+from textwrap import dedent
+from uuid import uuid4
 from .base_plotter import IPlotter
 
 
 class ChartJSPlotter(IPlotter):
-    """Class for creating charts.js charts in ipython  notebook."""
+    """Class for creating Charts.js charts in """
 
-    head = """
-    <!-- Load Charts.js -->
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.bundle.min.js'></script>
-    """
+    chartjs_cdn = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.bundle.min.js'
 
     template = """
-        <canvas id='{{div_id}}'></canvas>
-        <script>
-            var ctx = document.getElementById('{{div_id}}').getContext('2d');
-            var myNewChart = new Chart(ctx,{ type: '{{chart_type}}', data: {{data}}, options: {{options}} });
-        </script>
+    <canvas name='{{chart_name}}' id='{{chart_id}}'></canvas>
+    <script>
+        require.config({
+            paths: {
+                chartjs: '{{chartjs_cdn}}'
+            }
+        });
+
+        require(['chartjs'], function(Chart) {
+            const ctx = document.getElementById('{{chart_id}}').getContext('2d');
+            new Chart(ctx,{ type: '{{chart_type}}', data: {{data}}, options: {{options}} });
+        });
+    </script>
     """
 
     def __init__(self):
@@ -28,16 +35,16 @@ class ChartJSPlotter(IPlotter):
                data,
                chart_type,
                options=None,
-               div_id="chart",
-               head=""):
-        """Render the data in HTML template."""
-        if not self.is_valid_name(div_id):
-            raise ValueError(
-                "Name {} is invalid. Only letters, numbers, '_', and '-' are permitted ".format(
-                    div_id))
+               chart_name='chart'):
+        """Render the data using the HTML template"""
 
-        return Template(head + self.template).render(
-            div_id=div_id.replace(" ", "_"),
+        if self.chartjs_cdn.endswith('.js'):
+            self.chartjs_cdn = self.chartjs_cdn[:-3]
+
+        return Template(dedent(self.template)).render(
+            chart_id=str(uuid4()),
+            chart_name=chart_name,
+            chartjs_cdn=self.chartjs_cdn,
             data=json.dumps(
                 data, indent=4).replace("'", "\\'").replace('"', "'"),
             chart_type=chart_type,
@@ -48,25 +55,17 @@ class ChartJSPlotter(IPlotter):
                       data,
                       chart_type,
                       options=None,
-                      w=800,
-                      h=420,
                       filename='chart',
                       overwrite=True):
-        """Save the rendered html to a file and return an IFrame to display the plot in the notebook."""
-        self.save(data, chart_type, options, filename, overwrite)
-        return IFrame(filename + '.html', w, h)
+        """Save and output the rendered HTML"""
 
-    def plot(self, data, chart_type, options=None, w=800, h=420):
-        """Output an iframe containing the plot in the notebook without saving."""
-        return HTML(
-            self.iframe.format(
-                source=self.render(
-                    data=data,
-                    chart_type=chart_type,
-                    options=options,
-                    head=self.head),
-                w=w,
-                h=h))
+        self.save(data, chart_type, options, filename, overwrite)
+        return HTML(filename + '.html')
+
+    def plot(self, data, chart_type, options=None):
+        """Output the rendered HTML"""
+
+        return HTML(self.render(data, chart_type, options))
 
     def save(self,
              data,
@@ -74,13 +73,9 @@ class ChartJSPlotter(IPlotter):
              options=None,
              filename='chart',
              overwrite=True):
-        """Save the rendered html to a file in the same directory as the notebook."""
-        html = self.render(
-            data=data,
-            chart_type=chart_type,
-            options=options,
-            div_id=filename,
-            head=self.head)
+        """Save the rendered HTML in the same directory as the notebook"""
+
+        html = self.render(data, chart_type, options, filename)
 
         if overwrite:
             with open(filename.replace(" ", "_") + '.html', 'w') as f:
@@ -90,4 +85,4 @@ class ChartJSPlotter(IPlotter):
                 with open(filename.replace(" ", "_") + '.html', 'w') as f:
                     f.write(html)
             else:
-                raise IOError('File Already Exists!')
+                raise IOError('File already exists!')
