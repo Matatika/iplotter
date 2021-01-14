@@ -1,16 +1,18 @@
-from IPython.display import HTML
+from IPython.display import Image, HTML
 from jinja2 import Template
 import json
 import os
 from textwrap import dedent
 from uuid import uuid4
 from .base_plotter import IPlotter
+from .export import VirtualBrowser
 
 
 class ChartJSPlotter(IPlotter):
     """Class for creating Charts.js charts in """
 
     chartjs_cdn = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.bundle.min.js'
+    requirejs_cdn = 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js'
 
     template = """
     <canvas name='{{chart_name}}' id='{{chart_id}}'></canvas>
@@ -55,15 +57,42 @@ class ChartJSPlotter(IPlotter):
                       data,
                       chart_type,
                       options=None,
+                      as_image=False,
+                      image_width=960,
+                      image_height=480,
                       filename='chart',
                       overwrite=True):
-        """Save and output the rendered HTML"""
+        """Save and output the rendered HTML or image"""
 
-        self.save(data, chart_type, options, filename, overwrite)
+        self.save(data, chart_type, options, as_image,
+                  image_width, image_height, filename, overwrite)
+
+        if as_image:
+            with open(filename + '.png', 'rb') as image:
+                image_b64 = bytearray(image.read())
+
+            return Image(image_b64)
+
         return HTML(filename + '.html')
 
-    def plot(self, data, chart_type, options=None):
-        """Output the rendered HTML"""
+    def plot(self,
+             data,
+             chart_type,
+             options=None,
+             as_image=False,
+             image_width=960,
+             image_height=480):
+        """Output the rendered HTML or image"""
+
+        if as_image:
+            self.save(data, chart_type, options,
+                      as_image, image_width, image_height)
+
+            with open('chart.png', 'rb') as image:
+                image_b64 = bytearray(image.read())
+
+            os.remove('chart.png')
+            return Image(image_b64)
 
         return HTML(self.render(data, chart_type, options))
 
@@ -71,18 +100,34 @@ class ChartJSPlotter(IPlotter):
              data,
              chart_type,
              options=None,
+             as_image=False,
+             image_width=960,
+             image_height=480,
              filename='chart',
-             overwrite=True):
-        """Save the rendered HTML in the same directory as the notebook"""
+             overwrite=True,
+             keep_html=False):
+        """Save the rendered HTML or image"""
 
         html = self.render(data, chart_type, options, filename)
 
-        if overwrite:
+        filename = filename.replace(" ", "_")
+
+        if as_image:
+            html = '\n'.join(
+                ('<script src={}></script>'.format(self.requirejs_cdn), html))
+
+        if overwrite or not os.path.exists(filename + '.html'):
             with open(filename.replace(" ", "_") + '.html', 'w') as f:
                 f.write(html)
         else:
-            if not os.path.exists(filename.replace(" ", "_") + '.html'):
-                with open(filename.replace(" ", "_") + '.html', 'w') as f:
-                    f.write(html)
+            raise IOError('File already exists: {}.html'.format(filename))
+
+        if as_image:
+            if overwrite or not os.path.exists(filename + '.png'):
+                with VirtualBrowser() as browser:
+                    browser.save_as_png(filename, image_width, image_height)
             else:
-                raise IOError('File already exists!')
+                raise IOError('File already exists: {}.png'.format(filename))
+
+            if not keep_html:
+                os.remove(filename + '.html')
