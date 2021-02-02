@@ -21,7 +21,7 @@ class VirtualBrowser(object):
     def __enter__(self):
         return self
 
-    def save_as_png(self, filename, width=300, height=250, render_time=1):
+    def save_as_png(self, filename, width=960, height=480, render_time=1):
         """Open saved html file in an virtual browser and save a screen shot to PNG format."""
         self.driver.set_window_size(width, height)
         self.driver.get('file://{path}/{filename}'.format(

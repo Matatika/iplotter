@@ -15,7 +15,9 @@ class ChartJSPlotter(IPlotter):
     requirejs_cdn = 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js'
 
     template = """
-    <canvas name='{{chart_name}}' id='{{chart_id}}'></canvas>
+    <div>
+        <canvas name='{{chart_name}}' id='{{chart_id}}'></canvas>
+    </div>
     <script>
         require.config({
             paths: {
