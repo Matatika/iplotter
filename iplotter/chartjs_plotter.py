@@ -114,9 +114,7 @@ class ChartJSPlotter(IPlotter):
 
         filename = filename.replace(" ", "_")
 
-        if as_image:
-            html = '\n'.join(
-                ('<script src={}></script>'.format(self.requirejs_cdn), html))
+        html = '\n'.join(('<script src={}></script>'.format(self.requirejs_cdn), html))
 
         if overwrite or not os.path.exists(filename + '.html'):
             with open(filename.replace(" ", "_") + '.html', 'w') as f:
