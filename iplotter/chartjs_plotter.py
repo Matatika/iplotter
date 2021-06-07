@@ -12,7 +12,7 @@ class ChartJSPlotter(IPlotter):
     """Class for creating Charts.js charts in """
 
     chartjs_cdn = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.bundle.min.js'
-    requirejs_cdn = 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js'
+    requirejs_cdn = "'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js'"
 
     template = """
     <div>
