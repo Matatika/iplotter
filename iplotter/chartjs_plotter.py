@@ -12,7 +12,7 @@ class ChartJSPlotter(IPlotter):
     """Class for creating Charts.js charts in """
 
     chartjs_cdn = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.bundle.min.js'
-    requirejs_cdn = 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js'
+    requirejs_cdn = "'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js'"
 
     template = """
     <div>
@@ -114,9 +114,7 @@ class ChartJSPlotter(IPlotter):
 
         filename = filename.replace(" ", "_")
 
-        if as_image:
-            html = '\n'.join(
-                ('<script src={}></script>'.format(self.requirejs_cdn), html))
+        html = '\n'.join(('<script src={}></script>'.format(self.requirejs_cdn), html))
 
         if overwrite or not os.path.exists(filename + '.html'):
             with open(filename.replace(" ", "_") + '.html', 'w') as f:
